@@ -14,6 +14,8 @@ namespace Assets.Scripts.Commands
 
         public string info;
 
+        public int mapId;
+
         public CmdMap(IActionListener actionListener, int action, object p)
         {
             this.image = Panel.imgItemShop;

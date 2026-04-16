@@ -1848,6 +1848,7 @@ public class Service {
             for (KeyValue<Map, String> keyValue : player.mapSpaceships) {
                 msg.writer().writeUTF(keyValue.value);
                 msg.writer().writeUTF((String) keyValue.elements[0]);
+                msg.writer().writeShort(keyValue.key.template.id);
             }
             player.sendMessage(msg);
             msg.cleanup();

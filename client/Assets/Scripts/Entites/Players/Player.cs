@@ -269,7 +269,8 @@ namespace Assets.Scripts.Entites.Players
 
         public override void Paint(MyGraphics g)
         {
-            if (!IsPaint() || isSpaceship)
+            // Keep rendering local player even if camera smoothing lags behind fast movement updates.
+            if (((!Equals(me)) && !IsPaint()) || isSpaceship)
             {
                 return;
             }
@@ -1952,6 +1953,11 @@ namespace Assets.Scripts.Entites.Players
                 return;
             }
             PaintEffectEquip(g);
+            if (Equals(me))
+            {
+                g.DrawImage(Map.bong, xSd, ySd - 3, StaticObj.VCENTER_HCENTER);
+                return;
+            }
             base.PaintShadow(g);
         }
 

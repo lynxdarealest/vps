@@ -56,7 +56,9 @@ namespace Assets.Scripts.Networks
 
         public List<Message> recieveMessages2;
 
-        public List<int> iconRequest = new List<int>();
+        private readonly List<int> iconRequest = new List<int>();
+
+        private readonly object iconRequestLock = new object();
 
         public long timeConnect;
 
@@ -231,7 +233,41 @@ namespace Assets.Scripts.Networks
             CleanNetwork();
             recieveMessages.Clear();
             //sendMessages.Clear();
-            iconRequest.Clear();
+            ClearIconRequests();
+        }
+
+        public void QueueIconRequest(int id)
+        {
+            lock (iconRequestLock)
+            {
+                if (!iconRequest.Contains(id))
+                {
+                    iconRequest.Add(id);
+                }
+            }
+        }
+
+        private bool TryDequeueIconRequest(out int id)
+        {
+            lock (iconRequestLock)
+            {
+                if (iconRequest.Count <= 0)
+                {
+                    id = -1;
+                    return false;
+                }
+                id = iconRequest[0];
+                iconRequest.RemoveAt(0);
+                return true;
+            }
+        }
+
+        private void ClearIconRequests()
+        {
+            lock (iconRequestLock)
+            {
+                iconRequest.Clear();
+            }
         }
 
         public bool IsConnected()
@@ -360,28 +396,42 @@ namespace Assets.Scripts.Networks
                             controller.OnMessage(m);
                             recieveMessages2.RemoveAt(0);
                         }
-                        while (iconRequest.Count > 0)
+                        int id;
+                        while (TryDequeueIconRequest(out id))
                         {
-                            int id = iconRequest[0];
                             sbyte[] array = null;
-                            try
+                            if (!IconBundleCache.TryGetIcon(GraphicManager.instance.versionImage, id, out array))
                             {
-                                string hex = Rms.LoadString("icon_" + GraphicManager.instance.versionImage + "_" + id);
-                                string key = GraphicManager.instance.versionImage + "" + GraphicManager.instance.versionImage;
-                                array = Utils.Cast(Convert.FromBase64String(GraphicManager.instance.Decrypt(GraphicManager.instance.HexToString(hex), key)));
-                            }
-                            catch
-                            {
+                                try
+                                {
+                                    // Backward compatibility: read old per-icon cache and migrate it into bundle.
+                                    string hex = Rms.LoadString("icon_" + GraphicManager.instance.versionImage + "_" + id);
+                                    if (!string.IsNullOrEmpty(hex))
+                                    {
+                                        string key = GraphicManager.instance.versionImage + "" + GraphicManager.instance.versionImage;
+                                        array = Utils.Cast(Convert.FromBase64String(GraphicManager.instance.Decrypt(GraphicManager.instance.HexToString(hex), key)));
+                                        if (array != null)
+                                        {
+                                            IconBundleCache.SaveIcon(GraphicManager.instance.versionImage, id, array);
+                                        }
+                                    }
+                                }
+                                catch
+                                {
+                                }
                             }
                             if (array != null)
                             {
+                                if (GraphicManager.instance.datas.ContainsKey(id))
+                                {
+                                    GraphicManager.instance.datas.Remove(id);
+                                }
                                 GraphicManager.instance.datas.Add(id, array);
                             }
                             else
                             {
                                 Service.instance.RequestIcon(id);
                             }
-                            iconRequest.RemoveAt(0);
                         }
                         Thread.Sleep(1);
                     }

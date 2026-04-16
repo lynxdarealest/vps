@@ -119,6 +119,7 @@ public class Player extends Entity {
     public static final int TYPE_FLAG_NORMAL = 0;
     public static final int TYPE_FLAG_BLACK = 1;
     private static final Logger logger = Logger.getLogger(Player.class);
+    private static final Pattern MAP_GROUP_TRAILING_NUMBER_PATTERN = Pattern.compile("^(.*?)(\\d+)$");
     public PlayerData data;
     public Service service;
     public Session session;
@@ -184,6 +185,7 @@ public class Player extends Entity {
     public int skillUseId = -1;
     public ArrayList<Integer> mapsLoad;
     public ArrayList<KeyValue<Map, String>> mapSpaceships;
+    public transient boolean mapSpaceshipNeedCapsule;
     public int lastMapSpaceshipId;
     public NpcController npcController;
     public NpcTaskController npcTaskController;
@@ -223,6 +225,7 @@ public class Player extends Entity {
         this.data = data;
         mapsLoad = new ArrayList<>();
         mapSpaceships = new ArrayList<>();
+        mapSpaceshipNeedCapsule = false;
         lockMove = new ReentrantLock();
         lastMapSpaceshipId = -1;
         long now = System.currentTimeMillis();
@@ -793,6 +796,10 @@ public class Player extends Entity {
                 service.showNotification(Server.getInstance().notes);
                 return;
             }
+            if (npcId == -2) {
+                openMapByCurrentPlanet();
+                return;
+            }
             Npc npc = zone.getNpcs().stream().filter(n -> n.template.id == npcId && Math.abs(this.x - n.x) <= 300).findFirst().orElse(null);
             if (npcId == NpcName.ME || npcId == NpcName.MA_BAO_VE || npc != null) {
                 npcController.openMenu(npcId, npc);
@@ -800,6 +807,49 @@ public class Player extends Entity {
         } catch (Exception ex) {
             logger.error("openNpc", ex);
         }
+    }
+
+    private void openMapByCurrentPlanet() {
+        if (!hasCapsuleForMapTeleport()) {
+            addInfo(INFO_RED, "Bạn cần Capsule tàu bay để mở bản đồ");
+            return;
+        }
+        MapPlanet currentPlanet = zone.map.template.planet;
+        ArrayList<KeyValue<Map, String>> mapList = new ArrayList<>();
+        if (lastMapSpaceshipId != -1) {
+            Map oldMap = MapManager.getInstance().maps.get(lastMapSpaceshipId);
+            if (oldMap != null && oldMap.template.planet == currentPlanet && oldMap.template.id != zone.map.template.id && isCanJoinMap(oldMap)) {
+                mapList.add(new KeyValue<>(oldMap, "Chỗ cũ: " + oldMap.template.name, oldMap.getPlanetName()));
+            }
+        }
+        ArrayList<Map> maps = new ArrayList<>(MapManager.getInstance().maps.values());
+        maps.sort(Comparator.comparingInt(m -> m.template.id));
+        for (Map map : maps) {
+            if (map.template.id == zone.map.template.id || map.template.id == lastMapSpaceshipId) {
+                continue;
+            }
+            if (map.template.planet != currentPlanet || !isCanJoinMap(map)) {
+                continue;
+            }
+            mapList.add(new KeyValue<>(map, map.template.name, map.getPlanetName()));
+        }
+        showListMapSpaceship(mapList, true, true, false);
+    }
+
+    private boolean hasCapsuleForMapTeleport() {
+        return getQuantityItemInBag(ItemName.CAPSULE_TAU_BAY_DAC_BIET) > 0 || getQuantityItemInBag(ItemName.CAPSULE_TAU_BAY_THUONG) > 0;
+    }
+
+    private boolean consumeCapsuleForMapTeleport() {
+        if (getQuantityItemInBag(ItemName.CAPSULE_TAU_BAY_DAC_BIET) > 0) {
+            return true;
+        }
+        if (getQuantityItemInBag(ItemName.CAPSULE_TAU_BAY_THUONG) > 0) {
+            removeQuantityItemBagById(ItemName.CAPSULE_TAU_BAY_THUONG, 1);
+            return true;
+        }
+        addInfo(INFO_RED, "Bạn cần Capsule tàu bay để bay đến map này");
+        return false;
     }
 
     public void confirmMenu(Message message) {
@@ -5824,7 +5874,7 @@ public class Player extends Entity {
                 switch (item.template.id) {
                     case ItemName.HOP_QUA_DO: {
                         if (!Event.isTeacherDay2024()) {
-                            addInfo(INFO_RED, "Sự kiện Nhà giáo Việt Nam 2024 đã kết thúc");
+                            addInfo(INFO_RED, "Sự kiện của vật phẩm này đã kết thúc");
                             return;
                         }
                         Event.event.useItem(this, item);
@@ -5935,7 +5985,7 @@ public class Player extends Entity {
                     case ItemName.GIO_VAT_TU:
                     case ItemName.CAPSULE_TEACHER: {
                         if (!Event.isTeacherDay()) {
-                            addInfo(INFO_RED, "Sự kiện Nhà giáo Việt Nam 2023 đã kết thúc");
+                            addInfo(INFO_RED, "Sự kiện của vật phẩm này đã kết thúc");
                             return;
                         }
                         Event.event.useItem(this, item);
@@ -6774,46 +6824,48 @@ public class Player extends Entity {
                         if (item.template.id == ItemName.CAPSULE_TAU_BAY_THUONG) {
                             removeQuantityItemBag(index, 1);
                         }
+                        MapPlanet currentPlanet = zone.map.template.planet;
                         ArrayList<KeyValue<Map, String>> mapList = new ArrayList<>();
                         if (lastMapSpaceshipId != -1) {
                             Map map = MapManager.getInstance().maps.get(lastMapSpaceshipId);
-                            if (map != null) {
+                            if (map != null && map.template.planet == currentPlanet && map.template.id != zone.map.template.id && isCanJoinMap(map)) {
                                 mapList.add(new KeyValue<>(map, "Chỗ cũ: " + map.template.name, map.getPlanetName()));
                             } else {
                                 lastMapSpaceshipId = -1;
                             }
                         }
                         for (Map map : MapManager.getInstance().mapSpaceships) {
-                            if (map.template.id != lastMapSpaceshipId && map.template.id != zone.map.template.id && isCanJoinMap(map)) {
+                            if (map.template.planet == currentPlanet && map.template.id != lastMapSpaceshipId && map.template.id != zone.map.template.id && isCanJoinMap(map)) {
                                 mapList.add(new KeyValue<>(map, map.template.name, map.getPlanetName()));
                             }
                         }
                         if (clan != null) {
                             mapList.add(new KeyValue<>(clan.map, clan.map.template.name, "Bang hội " + clan.name));
                         }
-                        showListMapSpaceship(mapList);
+                        showListMapSpaceship(mapList, false, true, false);
                         return;
                     }
 
                     case ItemName.CAPSULE_THOI_KHONG: {
+                        MapPlanet currentPlanet = zone.map.template.planet;
                         ArrayList<KeyValue<Map, String>> mapList = new ArrayList<>();
                         if (lastMapSpaceshipId != -1) {
                             Map map = MapManager.getInstance().maps.get(lastMapSpaceshipId);
-                            if (map != null) {
+                            if (map != null && map.template.planet == currentPlanet && map.template.id != zone.map.template.id && isCanJoinMap(map)) {
                                 mapList.add(new KeyValue<>(map, "Chỗ cũ: " + map.template.name, map.getPlanetName()));
                             } else {
                                 lastMapSpaceshipId = -1;
                             }
                         }
                         for (Map map : MapManager.getInstance().maps.values()) {
-                            if (map.template.id != lastMapSpaceshipId && map.template.id != zone.map.template.id && isCanJoinMap(map)) {
+                            if (map.template.planet == currentPlanet && map.template.id != lastMapSpaceshipId && map.template.id != zone.map.template.id && isCanJoinMap(map)) {
                                 mapList.add(new KeyValue<>(map, map.template.name, map.getPlanetName()));
                             }
                         }
                         if (clan != null) {
                             mapList.add(new KeyValue<>(clan.map, clan.map.template.name, "Bang hội " + clan.name));
                         }
-                        showListMapSpaceship(mapList);
+                        showListMapSpaceship(mapList, false, true, false);
                         return;
                     }
 
@@ -7261,15 +7313,131 @@ public class Player extends Entity {
     }
 
     public void showListMapSpaceship(ArrayList<KeyValue<Map, String>> maps) {
+        showListMapSpaceship(maps, false);
+    }
+
+    public void showListMapSpaceship(ArrayList<KeyValue<Map, String>> maps, boolean needCapsuleWhenSelect) {
+        showListMapSpaceship(maps, needCapsuleWhenSelect, false, false);
+    }
+
+    public void showListMapSpaceshipCapsule(ArrayList<KeyValue<Map, String>> maps) {
+        showListMapSpaceshipCapsule(maps, false);
+    }
+
+    public void showListMapSpaceshipCapsule(ArrayList<KeyValue<Map, String>> maps, boolean needCapsuleWhenSelect) {
+        showListMapSpaceship(maps, needCapsuleWhenSelect, true, true);
+    }
+
+    private void showListMapSpaceship(ArrayList<KeyValue<Map, String>> maps, boolean needCapsuleWhenSelect, boolean currentPlanetOnly, boolean groupByArea) {
         if (zone == null || isDead()) {
             return;
         }
         mapSpaceships.clear();
-        mapSpaceships.addAll(maps);
+        MapPlanet currentPlanet = zone.map.template.planet;
+        for (KeyValue<Map, String> destination : maps) {
+            if (destination == null || destination.key == null) {
+                continue;
+            }
+            if (currentPlanetOnly && destination.key.template.planet != currentPlanet) {
+                continue;
+            }
+            mapSpaceships.add(destination);
+        }
+        if (groupByArea) {
+            mapSpaceships = groupMapDestinationsByArea(mapSpaceships);
+        }
+        mapSpaceshipNeedCapsule = needCapsuleWhenSelect;
         if (mapSpaceships.isEmpty()) {
+            mapSpaceshipNeedCapsule = false;
             addInfo(INFO_YELLOW, "Hiện tại không có điểm đến nào");
         }
         service.showListMapSpaceship();
+    }
+
+    private ArrayList<KeyValue<Map, String>> groupMapDestinationsByArea(ArrayList<KeyValue<Map, String>> maps) {
+        ArrayList<KeyValue<Map, String>> groupedDestinations = new ArrayList<>();
+        LinkedHashMap<String, MapAreaGroup> groups = new LinkedHashMap<>();
+        for (KeyValue<Map, String> destination : maps) {
+            String mapName = destination.value == null ? "" : destination.value.trim();
+            if (mapName.isEmpty() || mapName.startsWith("Chỗ cũ:")) {
+                groupedDestinations.add(destination);
+                continue;
+            }
+            java.util.regex.Matcher matcher = MAP_GROUP_TRAILING_NUMBER_PATTERN.matcher(mapName);
+            if (!matcher.matches()) {
+                groupedDestinations.add(destination);
+                continue;
+            }
+            String baseName = matcher.group(1) == null ? "" : matcher.group(1).trim();
+            if (baseName.isEmpty()) {
+                groupedDestinations.add(destination);
+                continue;
+            }
+            int order;
+            try {
+                order = Integer.parseInt(matcher.group(2));
+            } catch (Exception e) {
+                groupedDestinations.add(destination);
+                continue;
+            }
+            String groupKey = baseName.toLowerCase();
+            MapAreaGroup group = groups.get(groupKey);
+            if (group == null) {
+                group = new MapAreaGroup(baseName, destination, order);
+                groups.put(groupKey, group);
+            } else {
+                group.addDestination(destination, order);
+            }
+        }
+        for (MapAreaGroup group : groups.values()) {
+            if (group.count >= 2) {
+                String info = getGroupedDestinationInfo(group);
+                groupedDestinations.add(new KeyValue<>(group.defaultDestination.key, group.baseName, info));
+            } else {
+                groupedDestinations.add(group.defaultDestination);
+            }
+        }
+        return groupedDestinations;
+    }
+
+    private String getGroupedDestinationInfo(MapAreaGroup group) {
+        String originInfo = "";
+        if (group.defaultDestination.elements != null && group.defaultDestination.elements.length > 0 && group.defaultDestination.elements[0] != null) {
+            originInfo = String.valueOf(group.defaultDestination.elements[0]);
+        }
+        String range = group.minOrder == group.maxOrder ? String.valueOf(group.minOrder) : (group.minOrder + "-" + group.maxOrder);
+        String defaultMap = group.defaultDestination.value == null ? "" : group.defaultDestination.value;
+        if (originInfo == null || originInfo.isEmpty()) {
+            return "Khu " + range + " | Mặc định: " + defaultMap;
+        }
+        return originInfo + " | Khu " + range + " | Mặc định: " + defaultMap;
+    }
+
+    private static class MapAreaGroup {
+        private final String baseName;
+        private KeyValue<Map, String> defaultDestination;
+        private int minOrder;
+        private int maxOrder;
+        private int count;
+
+        private MapAreaGroup(String baseName, KeyValue<Map, String> destination, int order) {
+            this.baseName = baseName;
+            this.defaultDestination = destination;
+            this.minOrder = order;
+            this.maxOrder = order;
+            this.count = 1;
+        }
+
+        private void addDestination(KeyValue<Map, String> destination, int order) {
+            if (order < minOrder) {
+                minOrder = order;
+                defaultDestination = destination;
+            }
+            if (order > maxOrder) {
+                maxOrder = order;
+            }
+            count++;
+        }
     }
 
     public void selectMapSpaceship(Message message) {
@@ -7291,6 +7459,12 @@ public class Player extends Entity {
             }
             KeyValue<Map, String> keyValue = mapSpaceships.get(select);
             Map map = keyValue.key;
+            if (map == null || map.template.planet != zone.map.template.planet) {
+                addInfo(INFO_RED, "Chỉ có thể chọn map cùng hành tinh hiện tại");
+                mapSpaceships.clear();
+                mapSpaceshipNeedCapsule = false;
+                return;
+            }
             if (map.template.id == MapName.DAU_TRUONG) {
                 ArenaCustom zone = (ArenaCustom) keyValue.elements[1];
                 if (zone.status == ArenaCustom.STATUS_CLOSE) {
@@ -7300,10 +7474,16 @@ public class Player extends Entity {
                 this.x = ArenaCustom.POSITION_REFEREE[0][0];
                 this.y = ArenaCustom.POSITION_REFEREE[0][1];
                 zone.enter(this);
+                mapSpaceshipNeedCapsule = false;
                 return;
             }
             if (map.template.id == MapName.LANH_DIA_BANG_HOI && (clan == null || clan.map != map)) {
                 addInfo(INFO_RED, Language.CANT_ACTION);
+                return;
+            }
+            if (mapSpaceshipNeedCapsule && !consumeCapsuleForMapTeleport()) {
+                mapSpaceships.clear();
+                mapSpaceshipNeedCapsule = false;
                 return;
             }
             if (map.template.id == lastMapSpaceshipId) {
@@ -7313,6 +7493,7 @@ public class Player extends Entity {
             }
             teleport(map, map.expansion != null);
             mapSpaceships.clear();
+            mapSpaceshipNeedCapsule = false;
         } catch (Exception ex) {
             logger.error("selectMapSpaceship", ex);
         }
