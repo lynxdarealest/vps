@@ -7332,6 +7332,34 @@ public class Player extends Entity {
         if (zone == null || isDead()) {
             return;
         }
+        try {
+            if (maps == null) {
+                logger.info("showListMapSpaceship called with null maps");
+            } else {
+                StringBuilder sb = new StringBuilder();
+                sb.append("showListMapSpaceship called: mapsCount=").append(maps.size())
+                  .append(", needCapsule=").append(needCapsuleWhenSelect)
+                  .append(", currentPlanetOnly=").append(currentPlanetOnly)
+                  .append(", groupByArea=").append(groupByArea)
+                  .append(", zoneMap=").append(zone == null || zone.map == null || zone.map.template == null ? "null" : zone.map.template.name);
+                logger.info(sb.toString());
+                int i = 0;
+                for (KeyValue<Map, String> d : maps) {
+                    if (d == null) {
+                        logger.info("maps[" + i + "] = null");
+                    } else {
+                        String info = (d.elements != null && d.elements.length > 0 && d.elements[0] != null) ? d.elements[0].toString() : "";
+                        logger.info(String.format("maps[%d] id=%s name=%s value=%s info=%s", i,
+                                d.key == null || d.key.template == null ? "null" : String.valueOf(d.key.template.id),
+                                d.key == null || d.key.template == null ? "null" : d.key.template.name,
+                                d.value, info));
+                    }
+                    i++;
+                }
+            }
+        } catch (Exception e) {
+            logger.error("log showListMapSpaceship input", e);
+        }
         mapSpaceships.clear();
         MapPlanet currentPlanet = zone.map.template.planet;
         for (KeyValue<Map, String> destination : maps) {
@@ -7345,6 +7373,26 @@ public class Player extends Entity {
         }
         if (groupByArea) {
             mapSpaceships = groupMapDestinationsByArea(mapSpaceships);
+        }
+        try {
+            StringBuilder sb2 = new StringBuilder();
+            sb2.append("showListMapSpaceship filtered count=").append(mapSpaceships.size());
+            int j = 0;
+            for (KeyValue<Map, String> d2 : mapSpaceships) {
+                if (d2 == null) {
+                    sb2.append("; [" + j + "] = null");
+                } else {
+                    String info2 = (d2.elements != null && d2.elements.length > 0 && d2.elements[0] != null) ? d2.elements[0].toString() : "";
+                    sb2.append(String.format("; [%d]=%s(%s) val=%s info=%s", j,
+                            d2.key == null || d2.key.template == null ? "null" : String.valueOf(d2.key.template.id),
+                            d2.key == null || d2.key.template == null ? "null" : d2.key.template.name,
+                            d2.value, info2));
+                }
+                j++;
+            }
+            logger.info(sb2.toString());
+        } catch (Exception e) {
+            logger.error("log showListMapSpaceship output", e);
         }
         mapSpaceshipNeedCapsule = needCapsuleWhenSelect;
         if (mapSpaceships.isEmpty()) {
