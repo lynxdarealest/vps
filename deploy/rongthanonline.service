@@ -15,6 +15,9 @@ Environment="JAVA_OPTS=-Xms512m -Xmx2g"
 ExecStart=/opt/rongthanonline/server/run-server.sh
 Restart=always
 RestartSec=10
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+NoNewPrivileges=true
 
 [Install]
 WantedBy=multi-user.target
