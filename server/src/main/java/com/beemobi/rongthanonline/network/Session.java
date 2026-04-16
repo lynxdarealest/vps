@@ -324,7 +324,7 @@ public class Session {
                 service.startDialogOk(response.replace("false|", ""));
                 return;
             }
-            service.startDialogOk("Vui lòng thử lại sau hoặc đăng ký tại website https://rongthanonline.vn/");
+            service.startDialogOk("Vui lòng thử lại sau hoặc đăng ký tại website https://rto.lynxphg.me/");
         } catch (Exception ex) {
             logger.error("register", ex);
         } finally {
@@ -480,7 +480,13 @@ public class Session {
                     service.sendIcon(iconId, bytes);
                     Server.getInstance().icons.put(iconId, new Icon(iconId, bytes));
                 } else {
-                    disconnect();
+                    File fallback = new File("resources/icon/0.png");
+                    if (fallback.exists()) {
+                        byte[] bytes = Files.readAllBytes(fallback.toPath());
+                        service.sendIcon(iconId, bytes);
+                    } else {
+                        logger.warn("Missing icon file: resources/icon/" + iconId + ".png");
+                    }
                 }
             }
         } catch (Exception ex) {
@@ -698,3 +704,4 @@ public class Session {
         }
     }
 }
+

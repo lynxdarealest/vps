@@ -251,6 +251,8 @@ public class Map {
                 return "Yardrat";
             case SURVIVAL:
                 return "Sinh tồn";
+            case BILL:
+                return "Bill";
             default:
                 return "";
         }

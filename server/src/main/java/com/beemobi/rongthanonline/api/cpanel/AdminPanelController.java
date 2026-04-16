@@ -457,7 +457,6 @@ public class AdminPanelController {
 
     private static LinkedHashMap<String, EventTemplate> createEventTemplates() {
         LinkedHashMap<String, EventTemplate> templates = new LinkedHashMap<>();
-        templates.put("teacher_day_2024", new EventTemplate("teacher_day_2024", "Nha giao Viet Nam 2024", TeacherDay2024.class));
         templates.put("haloween_2024", new EventTemplate("haloween_2024", "Haloween 2024", Haloween2024.class));
         templates.put("co_hon_2024", new EventTemplate("co_hon_2024", "Co Hon 2024", CoHon2024.class));
         templates.put("trung_thu_2024", new EventTemplate("trung_thu_2024", "Trung Thu 2024", TrungThu2024.class));
@@ -520,7 +519,7 @@ public class AdminPanelController {
             case 3:
                 return "GIFT";
             case 4:
-                return "COIN";
+                return "ZALOPAY";
             default:
                 return "UNKNOWN";
         }

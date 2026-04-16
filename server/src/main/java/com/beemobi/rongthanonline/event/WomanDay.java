@@ -113,7 +113,7 @@ public class WomanDay extends Event {
             }
 
             case 0: {
-                player.service.startDialogOk("Thông tin chi tiết xem tại website rongthanonline.vn");
+                player.service.startDialogOk("Thông tin chi tiết xem tại website rto.lynxphg.me");
                 return;
             }
 

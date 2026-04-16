@@ -79,7 +79,7 @@ public class TeacherDay2024 extends Event {
     public ConcurrentHashMap<Integer, Integer> trainings = new ConcurrentHashMap<>();
 
     public TeacherDay2024(Timestamp startTime, Timestamp endTime) {
-        super("Nhà giáo Việt Nam 2024", startTime, endTime);
+        super("Sự kiện RTO", startTime, endTime);
         GIFT_SPECIAL.add(5, ItemName.NGOC_RONG_3_SAO);
         GIFT_SPECIAL.add(5, ItemName.BUA_BAO_VE_CAP_1);
         GIFT_SPECIAL.add(5, ItemName.BUA_BAO_VE_CAP_2);
@@ -135,7 +135,7 @@ public class TeacherDay2024 extends Event {
             }
 
             case 0: {
-                player.service.startDialogOk("Thông tin chi tiết xem tại website rongthanonline.vn");
+                player.service.startDialogOk("Thông tin chi tiết xem tại website rto.lynxphg.me");
                 return;
             }
 
@@ -404,3 +404,4 @@ public class TeacherDay2024 extends Event {
     public void start() {
     }
 }
+

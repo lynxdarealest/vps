@@ -119,7 +119,19 @@ public class HungVuong extends Event {
             }
 
             case 0: {
-                player.service.startDialogOk("Thông tin chi tiết xem tại website rongthanonline.vn");
+                StringBuilder content = new StringBuilder();
+                content.append("[GIỚI THIỆU SỰ KIỆN]\n");
+                content.append("Giỗ tổ Hùng Vương là chuỗi hoạt động thu thập và chế tạo lễ vật để đua TOP và đổi quà hiếm.\n\n");
+                content.append("[CƠ CHẾ THAM GIA]\n");
+                content.append("- Gõ 'hv' trên khung chat công khai để nhận nhiệm vụ hộ tống Mị Nương.\n");
+                content.append("- Hạ quái phù hợp cấp có cơ hội nhận Voi 9 ngà.\n");
+                content.append("- Làm nhiệm vụ ngày nhận Gà 9 cựa.\n");
+                content.append("- Hoàn thành hộ tống nhận Ngựa 9 hồng mao.\n");
+                content.append("- Dùng nguyên liệu chế tạo Lễ vật thường hoặc Lễ vật đặc biệt.\n");
+                content.append("- Mở lễ vật để nhận vật phẩm sự kiện, điểm TOP và điểm đổi quà.\n");
+                content.append("- Nạp hoặc được tặng 700 Kim cương nhận 1 Capsule Hùng Vương.\n\n");
+                content.append("Xem chi tiết và cập nhật tại: rto.lynxphg.me");
+                player.service.startDialogOk(content.toString());
                 return;
             }
 
@@ -554,3 +566,4 @@ public class HungVuong extends Event {
         }, 10000);
     }
 }
+

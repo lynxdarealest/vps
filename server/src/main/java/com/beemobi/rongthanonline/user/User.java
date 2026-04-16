@@ -1,5 +1,7 @@
 package com.beemobi.rongthanonline.user;
 
+import com.beemobi.rongthanonline.data.UserData;
+import com.beemobi.rongthanonline.repository.GameRepository;
 import com.beemobi.rongthanonline.entity.player.PlayerManager;
 import com.beemobi.rongthanonline.network.Session;
 import com.beemobi.rongthanonline.server.Server;
@@ -9,11 +11,12 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.List;
 import java.sql.Timestamp;
 
 public class User {
     private static final Logger logger = Logger.getLogger(User.class);
-    public static final String SERVER_URL = "http://rto.server.rongthanonline.com:5000";
+    public static final String SERVER_URL = "https://rto.lynxphg.me";
     public int id;
     public int server;
     public String email;
@@ -38,51 +41,33 @@ public class User {
     }
 
     public UserStatus login() {
-        /*if () {
-            return UserStatus.SERVER_MAINTAIN;
-        }*/
-        /*String response = loginServer();
-        if (response.equals("false")) {
-            return UserStatus.PASSWORD_INVALID;
-        }
-        if (response.startsWith("lock")) {
-            return UserStatus.PERMANENT_LOCK;
-        }
-        if (!response.startsWith("true")) {
-            return UserStatus.SERVER_MAINTAIN;
-        }
-        String[] array = response.split("\\|");
-        int index = Integer.parseInt(array[2]);
-        *//*if (index != -1 && index != server && !Server.getInstance().isInterServer()) {
-            server = index;
-            return UserStatus.SERVER_INVALID;
-        }*//*
-        server = index;
-        id = Integer.parseInt(array[1]);*/
-        server = -1;
-        id = 1;
-        return UserStatus.OK;
-        /*if (!CharMatcher.javaLetterOrDigit().matchesAllOf(username) || !CharMatcher.javaLetterOrDigit().matchesAllOf(password)) {
+        if (username == null || password == null || username.isEmpty() || password.isEmpty()) {
             return UserStatus.USERNAME_AND_PASSWORD_INVALID;
         }
-        List<UserData> userDataList = GameRepository.getInstance().userData.findByUsernameAndPassword(username, password);
-        if (userDataList.size() == 0) {
+
+        List<UserData> userDataList = GameRepository.getInstance().userData.findByUsername(username);
+        if (userDataList.isEmpty()) {
             return UserStatus.PASSWORD_INVALID;
         }
+
         UserData userData = userDataList.get(0);
-        server = userData.server;
-        if (server != -1 && server != Server.SERVER_CLIENT) {
+        if (!password.equals(userData.password)) {
+            return UserStatus.PASSWORD_INVALID;
+        }
+        server = userData.server == null ? -1 : userData.server;
+        if (server != -1 && server != Server.ID) {
             return UserStatus.SERVER_INVALID;
         }
-        if (userData.isLock) {
+        if (Boolean.TRUE.equals(userData.isLock)) {
             return UserStatus.PERMANENT_LOCK;
         }
         if (userData.lockTime != null && userData.lockTime.getTime() > System.currentTimeMillis()) {
             lockTime = userData.lockTime;
             return UserStatus.TIME_LOCK;
         }
+
         id = userData.id;
-        return UserStatus.OK;*/
+        return UserStatus.OK;
     }
 
     public boolean isAdmin() {
@@ -112,19 +97,27 @@ public class User {
 
     public String register() {
         try {
-            String base_url = String.format("%s/5000/api/register-from-client?email=%s&username=%s&password=%s&server=%d", SERVER_URL, email, username, password, server);
-            URL url = new URL(base_url);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-            if (conn.getResponseCode() != 200) {
-                return "error 200";
+            List<UserData> users = GameRepository.getInstance().userData.findByUsername(username);
+            if (!users.isEmpty()) {
+                return "false|Tài khoản đã tồn tại";
             }
-            BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
-            String output;
-            while ((output = br.readLine()) != null) {
-                return output.replace("\"", "");
-            }
-            conn.disconnect();
+
+            UserData userData = new UserData();
+            userData.username = username;
+            userData.password = password;
+            userData.email = email;
+            userData.server = Server.ID;
+            userData.roleId = 0;
+            userData.isLock = false;
+            userData.orderFailLeft = 3;
+            userData.lockTime = null;
+            userData.updateDate = new Timestamp(System.currentTimeMillis());
+            userData.createDate = new Timestamp(System.currentTimeMillis());
+            GameRepository.getInstance().userData.save(userData);
+
+            id = userData.id;
+            server = Server.ID;
+            return "true|" + id + "|" + server;
         } catch (Exception ex) {
             logger.error("registerServer", ex);
         }
