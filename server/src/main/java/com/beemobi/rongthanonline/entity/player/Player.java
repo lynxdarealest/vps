@@ -6835,7 +6835,8 @@ public class Player extends Entity {
                             }
                         }
                         for (Map map : MapManager.getInstance().mapSpaceships) {
-                            if (map.template.planet == currentPlanet && map.template.id != lastMapSpaceshipId && map.template.id != zone.map.template.id && isCanJoinMap(map)) {
+                            if (map.template.planet == currentPlanet && map.template.id != lastMapSpaceshipId && map.template.id != zone.map.template.id) {
+                                // For capsule teleport listing, include current-planet spaceship maps regardless of task restrictions
                                 mapList.add(new KeyValue<>(map, map.template.name, map.getPlanetName()));
                             }
                         }
@@ -6858,7 +6859,8 @@ public class Player extends Entity {
                             }
                         }
                         for (Map map : MapManager.getInstance().maps.values()) {
-                            if (map.template.planet == currentPlanet && map.template.id != lastMapSpaceshipId && map.template.id != zone.map.template.id && isCanJoinMap(map)) {
+                            if (map.template.planet == currentPlanet && map.template.id != lastMapSpaceshipId && map.template.id != zone.map.template.id) {
+                                // Include all maps on the same planet for capsule selection (ignore isCanJoinMap checks)
                                 mapList.add(new KeyValue<>(map, map.template.name, map.getPlanetName()));
                             }
                         }
