@@ -15,9 +15,9 @@ namespace Assets.Scripts.Networks
 
         public static string VERSION = "1.0.0";
 
-        public static string LINKWEB = "http://127.0.0.1:707";
+        public static string LINKWEB = "http://221.132.21.188:707";
 
-        public static string baseIP = "127.0.0.1";
+        public static string baseIP = "221.132.21.188";
 
         public static int LOGIN_VERSION = 1;
 
@@ -56,7 +56,7 @@ namespace Assets.Scripts.Networks
         public ServerManager(ScreenManager screenManager)
         {
             this.screenManager = screenManager;
-            request = UnityWebRequest.Get("http://127.0.0.1:707/api/admin/get-server");
+            request = UnityWebRequest.Get("http://221.132.21.188:707/api/admin/get-server");
             request.SendWebRequest();
             servers = new List<Server>();
             statusUpdate = UPDATE_START;
