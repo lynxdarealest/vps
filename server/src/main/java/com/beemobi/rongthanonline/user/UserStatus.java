@@ -1,0 +1,5 @@
+package com.beemobi.rongthanonline.user;
+
+public enum UserStatus {
+    OK, USERNAME_AND_PASSWORD_INVALID, PASSWORD_INVALID, PERMANENT_LOCK, TIME_LOCK, SERVER_MAINTAIN, SERVER_INVALID
+}

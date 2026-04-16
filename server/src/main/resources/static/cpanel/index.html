@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>RTO Command Deck</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Teko:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=20260416a">
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <div class="bg-glow bg-glow-left"></div>
+  <div class="bg-glow bg-glow-right"></div>
+
+  <main class="layout">
+    <section class="panel login-panel" id="loginPanel">
+      <div class="panel-head">
+        <p class="eyebrow">RONG THAN ONLINE</p>
+        <h1>COMMAND DECK</h1>
+      </div>
+      <div class="panel-body">
+        <label class="field">
+          <span>Tai khoan admin</span>
+          <input id="usernameInput" type="text" placeholder="admin" autocomplete="username">
+        </label>
+        <label class="field">
+          <span>Mat khau</span>
+          <input id="passwordInput" type="password" placeholder="******" autocomplete="current-password">
+        </label>
+        <button id="loginBtn" class="btn btn-primary btn-wide">Dang nhap cpanel</button>
+        <p class="hint">Su dung tai khoan admin ton tai trong rto_user.</p>
+      </div>
+    </section>
+
+    <section class="app hidden" id="appPanel">
+      <header class="topbar panel">
+        <div>
+          <p class="eyebrow">CONTROL ROOM</p>
+          <h2 id="welcomeText">Xin chao admin</h2>
+        </div>
+        <div class="topbar-actions">
+          <button id="refreshAllBtn" class="btn btn-ghost">Lam moi</button>
+          <button id="logoutBtn" class="btn btn-danger">Dang xuat</button>
+        </div>
+      </header>
+
+      <section class="cards" id="dashboardCards"></section>
+
+      <section class="grid-two">
+        <article class="panel">
+          <div class="panel-head compact">
+            <h3>Quan ly Event</h3>
+            <button id="eventStatusBtn" class="btn btn-ghost">Tai trang thai</button>
+          </div>
+          <div id="eventStatus" class="status-box"></div>
+          <div class="field-row">
+            <label class="field">
+              <span>Event</span>
+              <select id="eventKeySelect"></select>
+            </label>
+          </div>
+          <div class="field-row split">
+            <label class="field">
+              <span>Bat dau</span>
+              <input id="eventStartInput" type="datetime-local">
+            </label>
+            <label class="field">
+              <span>Ket thuc</span>
+              <input id="eventEndInput" type="datetime-local">
+            </label>
+          </div>
+          <div class="action-row">
+            <button id="activateEventBtn" class="btn btn-primary">Kich hoat Event</button>
+            <button id="deactivateEventBtn" class="btn btn-danger">Tat Event</button>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head compact">
+            <h3>Tao Gift Code</h3>
+            <button id="reloadGiftBtn" class="btn btn-ghost">Xem danh sach</button>
+          </div>
+          <div class="field-row split">
+            <label class="field">
+              <span>Code</span>
+              <input id="giftCodeInput" type="text" placeholder="event2026">
+            </label>
+            <label class="field">
+              <span>Het han</span>
+              <input id="giftExpiryInput" type="datetime-local">
+            </label>
+          </div>
+          <div class="field-row split-three">
+            <label class="field">
+              <span>Level req</span>
+              <input id="giftLevelInput" type="number" min="1" value="1">
+            </label>
+            <label class="field">
+              <span>Task req</span>
+              <input id="giftTaskInput" type="number" min="0" value="0">
+            </label>
+            <label class="field">
+              <span>Active req</span>
+              <input id="giftActiveInput" type="number" min="0" value="0">
+            </label>
+          </div>
+          <label class="field">
+            <span>itemsJson</span>
+            <textarea id="giftItemsInput" rows="5">[{"id":457,"quantity":1,"expiry":-1,"is_lock":true,"options":[],"is_default":false,"is_max":false}]</textarea>
+          </label>
+          <div class="action-row">
+            <button id="createGiftBtn" class="btn btn-primary">Tao Gift Code</button>
+          </div>
+          <div id="giftList" class="status-box"></div>
+        </article>
+      </section>
+
+      <section class="grid-two">
+        <article class="panel">
+          <div class="panel-head compact">
+            <h3>Tai khoan va Nhan vat</h3>
+            <button id="searchUserBtn" class="btn btn-ghost">Tim tai khoan</button>
+          </div>
+          <div class="field-row split">
+            <label class="field">
+              <span>Keyword</span>
+              <input id="userKeywordInput" type="text" placeholder="username">
+            </label>
+            <label class="field">
+              <span>User ID duoc chon</span>
+              <input id="selectedUserIdInput" type="number" min="1" placeholder="0">
+            </label>
+          </div>
+          <label class="field">
+            <span>Doi mat khau</span>
+            <div class="field-inline">
+              <input id="newPasswordInput" type="text" placeholder="mat khau moi 5-25 ky tu">
+              <button id="changePasswordBtn" class="btn btn-primary">Cap nhat</button>
+            </div>
+          </label>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Nhan vat</th>
+                  <th>Tai nguyen</th>
+                  <th>Chon</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head compact">
+            <h3>Cap Ruby / Ngoc / Vang</h3>
+          </div>
+          <div class="field-row split-three">
+            <label class="field">
+              <span>User ID</span>
+              <input id="grantUserIdInput" type="number" min="1" placeholder="Nhap User ID">
+            </label>
+            <label class="field">
+              <span>Loai</span>
+              <select id="grantCurrencySelect">
+                <option value="DIAMOND">NGOC (DIAMOND)</option>
+                <option value="RUBY">RUBY</option>
+                <option value="GOLD">VANG (XU)</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>So luong</span>
+              <input id="grantAmountInput" type="number" min="1" value="100">
+            </label>
+          </div>
+          <label class="field">
+            <span>Ly do</span>
+            <input id="grantReasonInput" type="text" placeholder="Event boi thuong / thuong top / fix loi">
+          </label>
+          <div class="action-row">
+            <button id="grantBtn" class="btn btn-primary btn-wide">Cap tai nguyen</button>
+          </div>
+          <p class="hint">Khi cap NGOC, he thong tao order va van tinh event nap/mission nap.</p>
+        </article>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head compact">
+          <h3>Log Nap (Recharge Orders)</h3>
+          <button id="reloadLogsBtn" class="btn btn-ghost">Tai log moi nhat</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>User</th>
+                <th>Loai</th>
+                <th>Ngoc</th>
+                <th>Xu</th>
+                <th>Trang thai</th>
+                <th>Ma don</th>
+                <th>Thoi gian</th>
+              </tr>
+            </thead>
+            <tbody id="logsTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="toast hidden" id="toast"></section>
+    </section>
+  </main>
+
+  <script src="app.js?v=20260416a"></script>
+</body>
+</html>

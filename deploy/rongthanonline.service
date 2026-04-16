@@ -1,0 +1,20 @@
+[Unit]
+Description=Rong Than Online Server
+After=network.target mysql.service
+Requires=mysql.service
+
+[Service]
+User=deploy
+WorkingDirectory=/opt/rongthanonline/server
+Environment="SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/rto?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Taipei"
+Environment="SPRING_DATASOURCE_USERNAME=rto_user"
+Environment="SPRING_DATASOURCE_PASSWORD=CHANGE_ME_STRONG_PASSWORD"
+Environment="SERVER_PORT=707"
+Environment="SERVER_SWING_GUI_ENABLED=false"
+Environment="JAVA_OPTS=-Xms512m -Xmx2g"
+ExecStart=/opt/rongthanonline/server/run-server.sh
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
