@@ -818,7 +818,8 @@ public class Player extends Entity {
         ArrayList<KeyValue<Map, String>> mapList = new ArrayList<>();
         if (lastMapSpaceshipId != -1) {
             Map oldMap = MapManager.getInstance().maps.get(lastMapSpaceshipId);
-            if (oldMap != null && oldMap.template.planet == currentPlanet && oldMap.template.id != zone.map.template.id && isCanJoinMap(oldMap)) {
+            if (oldMap != null && oldMap.template.planet == currentPlanet && oldMap.template.id != zone.map.template.id) {
+                // Include previous spaceship location regardless of task restrictions
                 mapList.add(new KeyValue<>(oldMap, "Chỗ cũ: " + oldMap.template.name, oldMap.getPlanetName()));
             }
         }
@@ -828,9 +829,10 @@ public class Player extends Entity {
             if (map.template.id == zone.map.template.id || map.template.id == lastMapSpaceshipId) {
                 continue;
             }
-            if (map.template.planet != currentPlanet || !isCanJoinMap(map)) {
+            if (map.template.planet != currentPlanet) {
                 continue;
             }
+            // Include same-planet maps for capsule UI regardless of isCanJoinMap
             mapList.add(new KeyValue<>(map, map.template.name, map.getPlanetName()));
         }
         showListMapSpaceship(mapList, true, true, false);
