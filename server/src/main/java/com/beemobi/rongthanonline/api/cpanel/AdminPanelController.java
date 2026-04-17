@@ -48,15 +48,15 @@ public class AdminPanelController {
         String password = normalize(body.password);
 
         if (username.isEmpty() || password.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Vui long nhap tai khoan va mat khau");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Vui lòng nhập tài khoản và mật khẩu.");
         }
         if (!ADMIN_USERNAMES.contains(username)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Tai khoan khong co quyen quan tri");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Tài khoản không có quyền quản trị.");
         }
 
         List<UserData> users = GameRepository.getInstance().userData.findByUsernameAndPassword(username, password);
         if (users.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Sai tai khoan hoac mat khau");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Sai tài khoản hoặc mật khẩu.");
         }
 
         String token = UUID.randomUUID().toString();
@@ -76,7 +76,7 @@ public class AdminPanelController {
         if (!token.isEmpty()) {
             sessions.remove(token);
         }
-        return ok("Da dang xuat");
+        return ok("Đã đăng xuất.");
     }
 
     @GetMapping(path = "/auth/me")
@@ -133,14 +133,14 @@ public class AdminPanelController {
 
         EventTemplate template = EVENT_TEMPLATES.get(normalize(body.key));
         if (template == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Event key khong hop le");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mã sự kiện không hợp lệ.");
         }
 
         long now = System.currentTimeMillis();
         long startAt = body.startAt == null ? now : body.startAt;
         long endAt = body.endAt == null ? now + 7L * 24 * 60 * 60 * 1000 : body.endAt;
         if (endAt <= startAt) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Thoi gian ket thuc phai lon hon bat dau");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Thời gian kết thúc phải lớn hơn thời gian bắt đầu.");
         }
 
         try {
@@ -150,7 +150,7 @@ public class AdminPanelController {
             return buildEventInfo(newEvent);
         } catch (Exception ex) {
             logger.error("activateEvent", ex);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Khong the kich hoat event");
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Không thể kích hoạt sự kiện.");
         }
     }
 
@@ -158,7 +158,7 @@ public class AdminPanelController {
     public Map<String, Object> deactivateEvent(HttpServletRequest request) {
         requireAdmin(request);
         Event.event = null;
-        return ok("Da tat event hien tai");
+        return ok("Đã tắt sự kiện hiện tại.");
     }
 
     @GetMapping(path = "/recharge-logs")
@@ -232,15 +232,15 @@ public class AdminPanelController {
 
         String newPassword = normalize(body.newPassword);
         if (!newPassword.matches("^[a-z0-9]{5,25}$")) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mat khau chi gom chu thuong va so, do dai 5-25");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mật khẩu chỉ gồm chữ thường và số, độ dài 5-25 ký tự.");
         }
 
         UserData user = GameRepository.getInstance().userData.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Khong tim thay tai khoan"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tài khoản."));
 
         user.password = newPassword;
         GameRepository.getInstance().userData.save(user);
-        return ok("Da cap nhat mat khau cho tai khoan " + user.username);
+        return ok("Đã cập nhật mật khẩu cho tài khoản " + user.username + ".");
     }
 
     @PostMapping(path = "/grants")
@@ -248,15 +248,15 @@ public class AdminPanelController {
         requireAdmin(request);
 
         if (body.userId == null || body.amount == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Thieu userId hoac amount");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Thiếu userId hoặc amount.");
         }
         if (body.amount <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "So luong phai lon hon 0");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Số lượng phải lớn hơn 0.");
         }
 
         String currency = normalize(body.currency).toUpperCase(Locale.ROOT);
         if (!currency.equals("DIAMOND") && !currency.equals("RUBY") && !currency.equals("GOLD")) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "currency chi ho tro DIAMOND, RUBY, GOLD");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "currency chỉ hỗ trợ DIAMOND, RUBY, GOLD.");
         }
 
         if (currency.equals("DIAMOND")) {
@@ -264,10 +264,10 @@ public class AdminPanelController {
             String orderCode = "CPANEL-" + orderId;
             int result = Server.getInstance().service.createOrder(orderId, body.userId, body.amount, 0, orderCode, 3);
             if (result != 1) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Khong the cong ngoc ngay luc nay (ma " + result + ")");
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Không thể cộng ngọc ngay lúc này (mã " + result + ").");
             }
 
-            Map<String, Object> response = ok("Da tao lenh cong ngoc thanh cong");
+            Map<String, Object> response = ok("Đã tạo lệnh cộng ngọc thành công.");
             response.put("orderId", orderId);
             response.put("orderCode", orderCode);
             response.put("eventRechargeCounted", true);
@@ -285,17 +285,17 @@ public class AdminPanelController {
                     player.upXu(body.amount);
                 }
                 if (!reason.isEmpty()) {
-                    player.service.startDialogOk("CPANEL cap tai nguyen: " + reason);
+                    player.service.startDialogOk("CPANEL cấp tài nguyên: " + reason);
                 }
             }
-            Map<String, Object> response = ok("Da cap tai nguyen cho nhan vat online");
+            Map<String, Object> response = ok("Đã cấp tài nguyên cho nhân vật online.");
             response.put("affectedOnlinePlayers", onlinePlayers.size());
             return response;
         }
 
         List<PlayerData> playerDataList = GameRepository.getInstance().playerData.findByUserIdAndServer(body.userId, Server.ID);
         if (playerDataList.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Khong tim thay nhan vat cua tai khoan");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy nhân vật của tài khoản.");
         }
 
         for (PlayerData data : playerDataList) {
@@ -309,7 +309,7 @@ public class AdminPanelController {
         }
         GameRepository.getInstance().playerData.saveAll(playerDataList);
 
-        Map<String, Object> response = ok("Da cap tai nguyen cho nhan vat offline");
+        Map<String, Object> response = ok("Đã cấp tài nguyên cho nhân vật offline.");
         response.put("affectedOfflineCharacters", playerDataList.size());
         return response;
     }
@@ -344,12 +344,12 @@ public class AdminPanelController {
 
         String code = normalize(body.code);
         if (!code.matches("^[a-z0-9_-]{5,30}$")) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Code chi gom chu thuong, so, _ hoac -, do dai 5-30");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Code chỉ gồm chữ thường, số, _ hoặc -, độ dài 5-30 ký tự.");
         }
 
         String itemsJson = body.itemsJson == null ? "" : body.itemsJson.trim();
         if (itemsJson.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "itemsJson khong duoc rong");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "itemsJson không được để trống.");
         }
 
         ArrayList<ItemGiftInfo> itemInfos;
@@ -357,11 +357,11 @@ public class AdminPanelController {
             itemInfos = Utils.gson.fromJson(itemsJson, new TypeToken<ArrayList<ItemGiftInfo>>() {
             }.getType());
         } catch (Exception ex) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "itemsJson khong hop le");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "itemsJson không hợp lệ.");
         }
 
         if (itemInfos == null || itemInfos.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Danh sach vat pham gift code khong duoc rong");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Danh sách vật phẩm gift code không được để trống.");
         }
 
         GiftCodeManager manager = GiftCodeManager.getInstance();
@@ -370,7 +370,7 @@ public class AdminPanelController {
         }
 
         if (manager.codes.containsKey(code)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Gift code da ton tai");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Gift code đã tồn tại.");
         }
 
         List<GiftCodeData> allCodes = GameRepository.getInstance().giftCodeData.findAll(Sort.by(Sort.Direction.DESC, "id"));
@@ -393,7 +393,7 @@ public class AdminPanelController {
         GameRepository.getInstance().giftCodeData.save(data);
         manager.codes.put(code, new GiftCode(data));
 
-        Map<String, Object> response = ok("Da tao gift code moi");
+        Map<String, Object> response = ok("Đã tạo gift code mới.");
         response.put("id", data.id);
         response.put("code", data.code);
         response.put("expiryTime", data.expiryTime.getTime());
@@ -404,12 +404,12 @@ public class AdminPanelController {
         cleanupExpiredSessions();
         String token = getToken(request);
         if (token.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Thieu token quan tri");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Thiếu token quản trị.");
         }
         AdminSession session = sessions.get(token);
         if (session == null || session.expiredAt < System.currentTimeMillis()) {
             sessions.remove(token);
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token het han hoac khong hop le");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token hết hạn hoặc không hợp lệ.");
         }
         return session;
     }
@@ -458,13 +458,13 @@ public class AdminPanelController {
     private static LinkedHashMap<String, EventTemplate> createEventTemplates() {
         LinkedHashMap<String, EventTemplate> templates = new LinkedHashMap<>();
         templates.put("haloween_2024", new EventTemplate("haloween_2024", "Haloween 2024", Haloween2024.class));
-        templates.put("co_hon_2024", new EventTemplate("co_hon_2024", "Co Hon 2024", CoHon2024.class));
+        templates.put("co_hon_2024", new EventTemplate("co_hon_2024", "Cô Hồn 2024", CoHon2024.class));
         templates.put("trung_thu_2024", new EventTemplate("trung_thu_2024", "Trung Thu 2024", TrungThu2024.class));
-        templates.put("tuu_truong_2024", new EventTemplate("tuu_truong_2024", "Tuu Truong 2024", TuuTruong2024.class));
-        templates.put("he_2024", new EventTemplate("he_2024", "He 2024", He2024.class));
-        templates.put("tet_2024", new EventTemplate("tet_2024", "Tet 2024", Tet2024.class));
-        templates.put("woman_day", new EventTemplate("woman_day", "Quoc te Phu nu", WomanDay.class));
-        templates.put("hung_vuong", new EventTemplate("hung_vuong", "Gio to Hung Vuong", HungVuong.class));
+        templates.put("tuu_truong_2024", new EventTemplate("tuu_truong_2024", "Tựu Trường 2024", TuuTruong2024.class));
+        templates.put("he_2024", new EventTemplate("he_2024", "Hè 2024", He2024.class));
+        templates.put("tet_2024", new EventTemplate("tet_2024", "Tết 2024", Tet2024.class));
+        templates.put("woman_day", new EventTemplate("woman_day", "Quốc tế Phụ nữ", WomanDay.class));
+        templates.put("hung_vuong", new EventTemplate("hung_vuong", "Giỗ Tổ Hùng Vương", HungVuong.class));
         templates.put("noel_2023", new EventTemplate("noel_2023", "Noel 2023", Noel2023.class));
         return templates;
     }
@@ -480,7 +480,7 @@ public class AdminPanelController {
                 return (Event) constructor.newInstance(template.label, startTime, endTime);
             }
         }
-        throw new IllegalStateException("Khong tim thay constructor hop le cho event " + template.key);
+        throw new IllegalStateException("Không tìm thấy constructor hợp lệ cho event " + template.key);
     }
 
     private Map<String, Object> buildEventInfo(Event event) {

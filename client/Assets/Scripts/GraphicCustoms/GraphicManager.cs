@@ -82,9 +82,9 @@ namespace Assets.Scripts.GraphicCustoms
                     return;
                 }
                 timeRequestIcons[id] = now;
-                if (!ServerManager.instance.session.iconRequest.Contains(id))
+                if (ServerManager.instance?.session != null)
                 {
-                    ServerManager.instance.session.iconRequest.Add(id);
+                    ServerManager.instance.session.QueueIconRequest(id);
                 }
             }
             catch

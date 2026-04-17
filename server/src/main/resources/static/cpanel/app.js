@@ -123,10 +123,10 @@ function setSelectedUser(userId) {
 
 function renderCards(data) {
   const items = [
-    { label: "Online Players", value: data.onlinePlayers ?? 0 },
-    { label: "Server", value: `#${data.serverId || 1}` },
-    { label: "Version", value: data.serverVersion || "?" },
-    { label: "Pending Orders", value: data.pendingRechargeOrders ?? 0 },
+    { label: "Người chơi online", value: data.onlinePlayers ?? 0 },
+    { label: "Máy chủ", value: `#${data.serverId || 1}` },
+    { label: "Phiên bản", value: data.serverVersion || "?" },
+    { label: "Đơn nạp chờ xử lý", value: data.pendingRechargeOrders ?? 0 },
   ];
 
   els.dashboardCards.innerHTML = items
@@ -141,15 +141,15 @@ function renderCards(data) {
 
 function renderEventStatus(eventData) {
   if (!eventData || !eventData.active) {
-    els.eventStatus.innerHTML = "<strong>Khong co event dang chay.</strong>";
+    els.eventStatus.innerHTML = "<strong>Hiện không có sự kiện đang chạy.</strong>";
     return;
   }
 
   els.eventStatus.innerHTML = `
     <strong>${eventData.name || eventData.className}</strong><br>
-    Key: ${eventData.key || "custom"}<br>
-    Bat dau: ${formatTime(eventData.startTime)}<br>
-    Ket thuc: ${formatTime(eventData.endTime)}
+    Mã sự kiện: ${eventData.key || "custom"}<br>
+    Bắt đầu: ${formatTime(eventData.startTime)}<br>
+    Kết thúc: ${formatTime(eventData.endTime)}
   `;
 }
 
@@ -158,7 +158,7 @@ function renderLogs(logs) {
     .map((row) => `
       <tr>
         <td>${row.id ?? ""}</td>
-        <td>${row.username || "unknown"} (#${row.userId || "?"})</td>
+        <td>${row.username || "không rõ"} (#${row.userId || "?"})</td>
         <td>${row.typeName || "UNKNOWN"}</td>
         <td>${row.diamond || 0}</td>
         <td>${row.coin || 0}</td>
@@ -175,20 +175,20 @@ function renderUsers(users) {
     .map((user) => {
       const chars = Array.isArray(user.characters) ? user.characters : [];
       const charNames = chars.length
-        ? chars.map((c) => `${c.name || "?"}${c.online ? " (online)" : ""}`).join(", ")
-        : "Khong co nhan vat";
+        ? chars.map((c) => `${c.name || "?"}${c.online ? " (đang online)" : ""}`).join(", ")
+        : "Không có nhân vật.";
       const resources = chars.length
         ? chars
-            .map((c) => `Ngoc:${c.diamond || 0} Ruby:${c.ruby || 0} Vang:${c.gold || 0}`)
+            .map((c) => `Ngọc: ${c.diamond || 0} | Ruby: ${c.ruby || 0} | Vàng: ${c.gold || 0}`)
             .join(" | ")
         : "-";
 
       return `
         <tr>
-          <td>${user.username || "unknown"}<br><small>ID: ${user.id}</small></td>
+          <td>${user.username || "không rõ"}<br><small>ID: ${user.id}</small></td>
           <td>${charNames}</td>
           <td>${resources}</td>
-          <td><button class="btn btn-ghost" data-pick-user="${user.id}">Chon</button></td>
+          <td><button class="btn btn-ghost" data-pick-user="${user.id}">Chọn</button></td>
         </tr>
       `;
     })
@@ -198,20 +198,20 @@ function renderUsers(users) {
     btn.addEventListener("click", () => {
       const id = Number(btn.getAttribute("data-pick-user"));
       setSelectedUser(id);
-      showToast(`Da chon user #${id}`);
+      showToast(`Đã chọn user #${id}.`);
     });
   });
 }
 
 function renderGiftList(giftCodes) {
   if (!giftCodes.length) {
-    els.giftList.innerHTML = "Chua co gift code.";
+    els.giftList.innerHTML = "Chưa có gift code.";
     return;
   }
 
   els.giftList.innerHTML = giftCodes
     .slice(0, 12)
-    .map((g) => `#${g.id} - ${g.code} | het han: ${formatTime(g.expiryTime)}`)
+    .map((g) => `#${g.id} - ${g.code} | hết hạn: ${formatTime(g.expiryTime)}`)
     .join("<br>");
 }
 
@@ -258,7 +258,7 @@ async function login() {
   const password = els.passwordInput.value.trim();
 
   if (!username || !password) {
-    showToast("Nhap tai khoan va mat khau", "error");
+    showToast("Vui lòng nhập tài khoản và mật khẩu.", "error");
     return;
   }
 
@@ -273,7 +273,7 @@ async function login() {
     localStorage.setItem(TOKEN_KEY, state.token);
 
     await initApp();
-    showToast("Dang nhap thanh cong");
+    showToast("Đăng nhập thành công.");
   } catch (error) {
     showToast(error.message, "error");
   }
@@ -296,7 +296,7 @@ async function initApp() {
   const me = await apiRequest("/auth/me");
   state.me = me;
 
-  els.welcomeText.textContent = `Xin chao ${me.username}`;
+  els.welcomeText.textContent = `Xin chào, ${me.username}.`;
   els.loginPanel.classList.add("hidden");
   els.appPanel.classList.remove("hidden");
 
@@ -332,7 +332,7 @@ async function activateEvent() {
     });
     renderEventStatus(data);
     await loadDashboard();
-    showToast("Da kich hoat event");
+    showToast("Đã kích hoạt sự kiện.");
   } catch (error) {
     showToast(error.message, "error");
   }
@@ -343,7 +343,7 @@ async function deactivateEvent() {
     await apiRequest("/events/deactivate", { method: "POST" });
     await loadEventStatus();
     await loadDashboard();
-    showToast("Da tat event");
+    showToast("Đã tắt sự kiện.");
   } catch (error) {
     showToast(error.message, "error");
   }
@@ -354,7 +354,7 @@ async function changePassword() {
   const newPassword = els.newPasswordInput.value.trim();
 
   if (!userId || !newPassword) {
-    showToast("Can chon User ID va nhap mat khau moi", "error");
+    showToast("Vui lòng chọn User ID và nhập mật khẩu mới.", "error");
     return;
   }
 
@@ -363,7 +363,7 @@ async function changePassword() {
       method: "POST",
       body: { newPassword },
     });
-    showToast(data.message || "Da doi mat khau");
+    showToast(data.message || "Đã đổi mật khẩu.");
   } catch (error) {
     showToast(error.message, "error");
   }
@@ -376,7 +376,7 @@ async function grantCurrency() {
   const reason = els.grantReasonInput.value.trim();
 
   if (!userId || !amount) {
-    showToast("Can nhap User ID va so luong", "error");
+    showToast("Vui lòng nhập User ID và số lượng.", "error");
     return;
   }
 
@@ -385,7 +385,7 @@ async function grantCurrency() {
       method: "POST",
       body: { userId, currency, amount, reason },
     });
-    showToast(data.message || "Cap tai nguyen thanh cong");
+    showToast(data.message || "Cấp tài nguyên thành công.");
     await Promise.all([loadUsers(), loadLogs(), loadDashboard()]);
   } catch (error) {
     showToast(error.message, "error");
@@ -401,7 +401,7 @@ async function createGiftCode() {
   const itemsJson = els.giftItemsInput.value.trim();
 
   if (!code || !itemsJson) {
-    showToast("Code va itemsJson khong duoc rong", "error");
+    showToast("Code và itemsJson không được để trống.", "error");
     return;
   }
 
@@ -417,7 +417,7 @@ async function createGiftCode() {
         itemsJson,
       },
     });
-    showToast(data.message || "Tao gift code thanh cong");
+    showToast(data.message || "Tạo gift code thành công.");
     await loadGiftCodes();
   } catch (error) {
     showToast(error.message, "error");
@@ -460,7 +460,7 @@ async function bootstrap() {
   } catch (error) {
     state.token = "";
     localStorage.removeItem(TOKEN_KEY);
-    showToast("Phien dang nhap het han, vui long dang nhap lai", "error");
+    showToast("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.", "error");
   }
 }
 

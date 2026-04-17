@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>RTO Command Deck</title>
+  <title>RTO Bảng Điều Khiển</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Teko:wght@400;500;600&display=swap" rel="stylesheet">
@@ -25,15 +25,15 @@
       </div>
       <div class="panel-body">
         <label class="field">
-          <span>Tai khoan admin</span>
+          <span>Tài khoản admin:</span>
           <input id="usernameInput" type="text" placeholder="admin" autocomplete="username">
         </label>
         <label class="field">
-          <span>Mat khau</span>
+          <span>Mật khẩu:</span>
           <input id="passwordInput" type="password" placeholder="******" autocomplete="current-password">
         </label>
-        <button id="loginBtn" class="btn btn-primary btn-wide">Dang nhap cpanel</button>
-        <p class="hint">Su dung tai khoan admin ton tai trong rto_user.</p>
+        <button id="loginBtn" class="btn btn-primary btn-wide">Đăng nhập CPanel</button>
+        <p class="hint">Vui lòng dùng tài khoản admin đã tồn tại trong rto_user.</p>
       </div>
     </section>
 
@@ -41,11 +41,11 @@
       <header class="topbar panel">
         <div>
           <p class="eyebrow">CONTROL ROOM</p>
-          <h2 id="welcomeText">Xin chao admin</h2>
+          <h2 id="welcomeText">Xin chào, admin.</h2>
         </div>
         <div class="topbar-actions">
-          <button id="refreshAllBtn" class="btn btn-ghost">Lam moi</button>
-          <button id="logoutBtn" class="btn btn-danger">Dang xuat</button>
+          <button id="refreshAllBtn" class="btn btn-ghost">Làm mới</button>
+          <button id="logoutBtn" class="btn btn-danger">Đăng xuất</button>
         </div>
       </header>
 
@@ -54,67 +54,67 @@
       <section class="grid-two">
         <article class="panel">
           <div class="panel-head compact">
-            <h3>Quan ly Event</h3>
-            <button id="eventStatusBtn" class="btn btn-ghost">Tai trang thai</button>
+            <h3>Quản lý sự kiện</h3>
+            <button id="eventStatusBtn" class="btn btn-ghost">Tải trạng thái</button>
           </div>
           <div id="eventStatus" class="status-box"></div>
           <div class="field-row">
             <label class="field">
-              <span>Event</span>
+              <span>Sự kiện:</span>
               <select id="eventKeySelect"></select>
             </label>
           </div>
           <div class="field-row split">
             <label class="field">
-              <span>Bat dau</span>
+              <span>Bắt đầu:</span>
               <input id="eventStartInput" type="datetime-local">
             </label>
             <label class="field">
-              <span>Ket thuc</span>
+              <span>Kết thúc:</span>
               <input id="eventEndInput" type="datetime-local">
             </label>
           </div>
           <div class="action-row">
-            <button id="activateEventBtn" class="btn btn-primary">Kich hoat Event</button>
-            <button id="deactivateEventBtn" class="btn btn-danger">Tat Event</button>
+            <button id="activateEventBtn" class="btn btn-primary">Kích hoạt sự kiện</button>
+            <button id="deactivateEventBtn" class="btn btn-danger">Tắt sự kiện</button>
           </div>
         </article>
 
         <article class="panel">
           <div class="panel-head compact">
-            <h3>Tao Gift Code</h3>
-            <button id="reloadGiftBtn" class="btn btn-ghost">Xem danh sach</button>
+            <h3>Tạo Gift Code</h3>
+            <button id="reloadGiftBtn" class="btn btn-ghost">Xem danh sách</button>
           </div>
           <div class="field-row split">
             <label class="field">
-              <span>Code</span>
+              <span>Mã code:</span>
               <input id="giftCodeInput" type="text" placeholder="event2026">
             </label>
             <label class="field">
-              <span>Het han</span>
+              <span>Hết hạn:</span>
               <input id="giftExpiryInput" type="datetime-local">
             </label>
           </div>
           <div class="field-row split-three">
             <label class="field">
-              <span>Level req</span>
+              <span>Yêu cầu cấp độ:</span>
               <input id="giftLevelInput" type="number" min="1" value="1">
             </label>
             <label class="field">
-              <span>Task req</span>
+              <span>Yêu cầu nhiệm vụ:</span>
               <input id="giftTaskInput" type="number" min="0" value="0">
             </label>
             <label class="field">
-              <span>Active req</span>
+              <span>Yêu cầu điểm hoạt động:</span>
               <input id="giftActiveInput" type="number" min="0" value="0">
             </label>
           </div>
           <label class="field">
-            <span>itemsJson</span>
+            <span>Danh sách vật phẩm (JSON):</span>
             <textarea id="giftItemsInput" rows="5">[{"id":457,"quantity":1,"expiry":-1,"is_lock":true,"options":[],"is_default":false,"is_max":false}]</textarea>
           </label>
           <div class="action-row">
-            <button id="createGiftBtn" class="btn btn-primary">Tao Gift Code</button>
+            <button id="createGiftBtn" class="btn btn-primary">Tạo Gift Code</button>
           </div>
           <div id="giftList" class="status-box"></div>
         </article>
@@ -123,24 +123,24 @@
       <section class="grid-two">
         <article class="panel">
           <div class="panel-head compact">
-            <h3>Tai khoan va Nhan vat</h3>
-            <button id="searchUserBtn" class="btn btn-ghost">Tim tai khoan</button>
+            <h3>Tài khoản và nhân vật</h3>
+            <button id="searchUserBtn" class="btn btn-ghost">Tìm tài khoản</button>
           </div>
           <div class="field-row split">
             <label class="field">
-              <span>Keyword</span>
+              <span>Từ khóa:</span>
               <input id="userKeywordInput" type="text" placeholder="username">
             </label>
             <label class="field">
-              <span>User ID duoc chon</span>
+              <span>User ID đã chọn:</span>
               <input id="selectedUserIdInput" type="number" min="1" placeholder="0">
             </label>
           </div>
           <label class="field">
-            <span>Doi mat khau</span>
+            <span>Đổi mật khẩu:</span>
             <div class="field-inline">
-              <input id="newPasswordInput" type="text" placeholder="mat khau moi 5-25 ky tu">
-              <button id="changePasswordBtn" class="btn btn-primary">Cap nhat</button>
+              <input id="newPasswordInput" type="text" placeholder="Mật khẩu mới, 5-25 ký tự">
+              <button id="changePasswordBtn" class="btn btn-primary">Cập nhật</button>
             </div>
           </label>
           <div class="table-wrap">
@@ -148,9 +148,9 @@
               <thead>
                 <tr>
                   <th>User</th>
-                  <th>Nhan vat</th>
-                  <th>Tai nguyen</th>
-                  <th>Chon</th>
+                  <th>Nhân vật</th>
+                  <th>Tài nguyên</th>
+                  <th>Chọn</th>
                 </tr>
               </thead>
               <tbody id="usersTableBody"></tbody>
@@ -160,15 +160,15 @@
 
         <article class="panel">
           <div class="panel-head compact">
-            <h3>Cap Ruby / Ngoc / Vang</h3>
+            <h3>Cấp Ruby / Ngọc / Vàng</h3>
           </div>
           <div class="field-row split-three">
             <label class="field">
-              <span>User ID</span>
-              <input id="grantUserIdInput" type="number" min="1" placeholder="Nhap User ID">
+              <span>User ID:</span>
+              <input id="grantUserIdInput" type="number" min="1" placeholder="Nhập User ID">
             </label>
             <label class="field">
-              <span>Loai</span>
+              <span>Loại:</span>
               <select id="grantCurrencySelect">
                 <option value="DIAMOND">NGOC (DIAMOND)</option>
                 <option value="RUBY">RUBY</option>
@@ -176,25 +176,25 @@
               </select>
             </label>
             <label class="field">
-              <span>So luong</span>
+              <span>Số lượng:</span>
               <input id="grantAmountInput" type="number" min="1" value="100">
             </label>
           </div>
           <label class="field">
-            <span>Ly do</span>
-            <input id="grantReasonInput" type="text" placeholder="Event boi thuong / thuong top / fix loi">
+            <span>Lý do:</span>
+            <input id="grantReasonInput" type="text" placeholder="Event bồi thường / thưởng top / fix lỗi">
           </label>
           <div class="action-row">
-            <button id="grantBtn" class="btn btn-primary btn-wide">Cap tai nguyen</button>
+            <button id="grantBtn" class="btn btn-primary btn-wide">Cấp tài nguyên</button>
           </div>
-          <p class="hint">Khi cap NGOC, he thong tao order va van tinh event nap/mission nap.</p>
+          <p class="hint">Khi cấp NGỌC, hệ thống tạo order và vẫn tính event nạp/mission nạp.</p>
         </article>
       </section>
 
       <section class="panel">
         <div class="panel-head compact">
-          <h3>Log Nap (Recharge Orders)</h3>
-          <button id="reloadLogsBtn" class="btn btn-ghost">Tai log moi nhat</button>
+          <h3>Log nạp (Recharge Orders)</h3>
+          <button id="reloadLogsBtn" class="btn btn-ghost">Tải log mới nhất</button>
         </div>
         <div class="table-wrap">
           <table>
@@ -202,12 +202,12 @@
               <tr>
                 <th>ID</th>
                 <th>User</th>
-                <th>Loai</th>
-                <th>Ngoc</th>
+                <th>Loại</th>
+                <th>Ngọc</th>
                 <th>Xu</th>
-                <th>Trang thai</th>
-                <th>Ma don</th>
-                <th>Thoi gian</th>
+                <th>Trạng thái</th>
+                <th>Mã đơn</th>
+                <th>Thời gian</th>
               </tr>
             </thead>
             <tbody id="logsTableBody"></tbody>
