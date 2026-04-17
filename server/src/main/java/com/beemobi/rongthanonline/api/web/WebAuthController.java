@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpSession;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -34,6 +36,13 @@ import java.util.Map;
 public class WebAuthController {
     private static final String SESSION_USER_ID = "webUserId";
     private static final String SESSION_USERNAME = "webUsername";
+    private static final String TOPUP_PROVIDER = "ZaloPay";
+    private static final String TOPUP_ACCOUNT_NUMBER = "0876522271";
+    private static final String TOPUP_ACCOUNT_NAME = "NGUYEN TO DUC TRUONG";
+    private static final int TOPUP_CODE_MIN = 100000;
+    private static final int TOPUP_CODE_MOD = 900000;
+    private static final int TOPUP_CODE_MULTIPLIER = 534971;
+    private static final int TOPUP_CODE_INCREMENT = 72817;
 
     @GetMapping(path = "/me")
     public Map<String, Object> me(HttpSession session) {
@@ -135,6 +144,32 @@ public class WebAuthController {
         return response;
     }
 
+    @GetMapping(path = "/bank-topup/profile")
+    public Map<String, Object> bankTopupProfile(HttpSession session) {
+        Integer userId = (Integer) session.getAttribute(SESSION_USER_ID);
+        if (userId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Vui long dang nhap de lay thong tin nap");
+        }
+
+        UserData userData = GameRepository.getInstance().userData.findById(userId).orElse(null);
+        if (userData == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Khong tim thay tai khoan");
+        }
+
+        String topupCode = buildStableTopupCode(userData.id);
+        String qrUrl = buildQrImageUrl(topupCode);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "ok");
+        response.put("provider", TOPUP_PROVIDER);
+        response.put("accountNumber", TOPUP_ACCOUNT_NUMBER);
+        response.put("accountName", TOPUP_ACCOUNT_NAME);
+        response.put("topupCode", topupCode);
+        response.put("transferContent", topupCode);
+        response.put("qrImageUrl", qrUrl);
+        return response;
+    }
+
         @GetMapping(path = "/events")
         public Map<String, Object> events() {
         List<Map<String, String>> items = new ArrayList<>();
@@ -192,6 +227,20 @@ public class WebAuthController {
 
     private String normalize(String value) {
         return value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private String buildStableTopupCode(Integer userId) {
+        long uid = userId == null ? 0L : Math.abs(userId.longValue());
+        long mixed = (uid * TOPUP_CODE_MULTIPLIER + TOPUP_CODE_INCREMENT) % TOPUP_CODE_MOD;
+        int code = (int) (TOPUP_CODE_MIN + mixed);
+        return String.format("%06d", code);
+    }
+
+    private String buildQrImageUrl(String transferContent) {
+        String addInfo = URLEncoder.encode(transferContent, StandardCharsets.UTF_8);
+        String accountName = URLEncoder.encode(TOPUP_ACCOUNT_NAME, StandardCharsets.UTF_8);
+        return "https://img.vietqr.io/image/zalopay-" + TOPUP_ACCOUNT_NUMBER + "-compact2.png?addInfo="
+                + addInfo + "&accountName=" + accountName;
     }
 
     private ResponseStatusException mapUserStatus(UserStatus status, User user) {

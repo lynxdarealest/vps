@@ -14,17 +14,28 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping(path = "/api/players")
 public class PlayerController {
     private static final Logger logger = Logger.getLogger(PlayerController.class);
+    private static final int TOPUP_CODE_MIN = 100000;
+    private static final int TOPUP_CODE_MOD = 900000;
+    private static final int TOPUP_CODE_MULTIPLIER = 534971;
+    private static final int TOPUP_CODE_MULTIPLIER_INV = 802931;
+    private static final int TOPUP_CODE_INCREMENT = 72817;
+    private static final Pattern SIX_DIGIT_PATTERN = Pattern.compile("(\\d{6})");
 
     @RequestMapping(path = {"/recharge/webhook", "/zalopay/webhook"}, method = {RequestMethod.GET, RequestMethod.POST})
     public ResponseEntity<Map<String, Object>> rechargeWebhook(@RequestParam(value = "secret", required = false) String secret,
                                                                @RequestParam(value = "username", required = false) String username,
                                                                @RequestParam(value = "userId", required = false) Integer userId,
                                                                @RequestParam(value = "user_id", required = false) Integer userIdAlt,
+                                                               @RequestParam(value = "topupCode", required = false) String topupCode,
+                                                               @RequestParam(value = "topup_code", required = false) String topupCodeAlt,
                                                                @RequestParam("order_id") Long orderId,
                                                                @RequestParam("order_code") String orderCode,
                                                                @RequestParam("type") Integer type,
@@ -44,15 +55,33 @@ public class PlayerController {
             Integer resolvedUserId = userId != null ? userId : userIdAlt;
             if (resolvedUserId == null) {
                 String resolvedUsername = normalize(username);
-                if (resolvedUsername.isEmpty()) {
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result(false, "thieu username hoac userId", null));
+                if (!resolvedUsername.isEmpty()) {
+                    List<UserData> users = GameRepository.getInstance().userData.findByUsername(resolvedUsername);
+                    if (users.isEmpty()) {
+                        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(result(false, "khong tim thay tai khoan", null));
+                    }
+                    resolvedUserId = users.get(0).id;
+                    username = users.get(0).username;
+                } else {
+                    String rawTopupCode = normalize(topupCode);
+                    if (rawTopupCode.isEmpty()) {
+                        rawTopupCode = normalize(topupCodeAlt);
+                    }
+                    if (rawTopupCode.isEmpty()) {
+                        rawTopupCode = normalize(orderCode);
+                    }
+
+                    resolvedUserId = resolveUserIdByTopupCode(rawTopupCode);
+                    if (resolvedUserId == null) {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result(false, "thieu username, userId hoac topup_code hop le", null));
+                    }
+
+                    Optional<UserData> userDataOpt = GameRepository.getInstance().userData.findById(resolvedUserId);
+                    if (!userDataOpt.isPresent()) {
+                        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(result(false, "khong tim thay tai khoan", null));
+                    }
+                    username = userDataOpt.get().username;
                 }
-                List<UserData> users = GameRepository.getInstance().userData.findByUsername(resolvedUsername);
-                if (users.isEmpty()) {
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(result(false, "khong tim thay tai khoan", null));
-                }
-                resolvedUserId = users.get(0).id;
-                username = users.get(0).username;
             }
 
             if (type == null || type < 0 || type > 4) {
@@ -139,6 +168,52 @@ public class PlayerController {
 
     private String normalize(String value) {
         return value == null ? "" : value.trim();
+    }
+
+    private Integer resolveUserIdByTopupCode(String rawTopupCode) {
+        Matcher matcher = SIX_DIGIT_PATTERN.matcher(rawTopupCode == null ? "" : rawTopupCode);
+        if (!matcher.find()) {
+            return null;
+        }
+
+        int code;
+        try {
+            code = Integer.parseInt(matcher.group(1));
+        } catch (Exception ex) {
+            return null;
+        }
+
+        if (code < TOPUP_CODE_MIN || code > (TOPUP_CODE_MIN + TOPUP_CODE_MOD - 1)) {
+            return null;
+        }
+
+        long mixed = code - TOPUP_CODE_MIN;
+        long base = mod(mixed - TOPUP_CODE_INCREMENT, TOPUP_CODE_MOD);
+        long userIdCandidate = mod(base * TOPUP_CODE_MULTIPLIER_INV, TOPUP_CODE_MOD);
+        if (userIdCandidate <= 0 || userIdCandidate > Integer.MAX_VALUE) {
+            return null;
+        }
+
+        int candidate = (int) userIdCandidate;
+        Optional<UserData> userDataOpt = GameRepository.getInstance().userData.findById(candidate);
+        if (!userDataOpt.isPresent()) {
+            return null;
+        }
+
+        String generatedCode = buildStableTopupCode(candidate);
+        return generatedCode.equals(matcher.group(1)) ? candidate : null;
+    }
+
+    private String buildStableTopupCode(Integer userId) {
+        long uid = userId == null ? 0L : Math.abs(userId.longValue());
+        long mixed = (uid * TOPUP_CODE_MULTIPLIER + TOPUP_CODE_INCREMENT) % TOPUP_CODE_MOD;
+        int code = (int) (TOPUP_CODE_MIN + mixed);
+        return String.format("%06d", code);
+    }
+
+    private long mod(long value, long mod) {
+        long result = value % mod;
+        return result < 0 ? result + mod : result;
     }
 
     @GetMapping(path = "/give-away")
